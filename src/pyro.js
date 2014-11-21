@@ -1,6 +1,12 @@
 /* Pyro for Firebase*/
   // Pyro Platform Firebase:
-  var pyroRef = new Firebase('http://pyro.firebaseio.com');
+// [TODO] Remove script injecting of firebase
+  // newScript = document.createElement('script');
+  // newScript.type = 'text/javascript';
+  // newScript.src = 'bower_components/firebase/firebase.js';
+  // document.getElementsByTagName('head')[0].appendChild(newScript);
+  // var pyroRef = new Firebase('http://pyro.firebaseio.com');
+
   // Constructor:
   function Pyro (argPyroData) {
     //Check for existance of Firebase
