@@ -97,6 +97,7 @@
       if(auth) {
         argObject.author = auth.uid;
       }
+      argObject.createdAt = Date.now();
       var newObj = this.mainRef.child(argListName).push(argObject, function(){
         callback(newObj);
       });
@@ -117,10 +118,18 @@
         callback(objectSnap.val());
       });
     },
+    deleteObject:function(argListName, argObjectId, callback){
+      var listRef = this.mainRef.child(argListName);
+      listRef.child(argObjectId).remove();
+      console.log(argObjectId + ' was removed from the ' + argListName + ' list');
+      if(callback){
+        callback();
+      }
+    },
     instanceRef: function(argInstanceData, successCb, errorCb) {
       console.log('loadInstance:', argInstanceData);
       this.currentInstance = {name:argInstanceData.name}
-      checkForInstance(this, successCb, errorCb);
+      checkForInstance(this, argInstanceData.name, successCb, errorCb);
     },
     getObjectCount: function(argListName, callback){
       var self = this;
@@ -141,10 +150,10 @@
     },
     createInstance: function (argPyroData, successCb, errorCb) {
       var self = this;
-      if(argPyroData.hasOwnProperty('name') && argPyroData.hasOwnProperty('secret')){
+      if(argPyroData.hasOwnProperty('name')){
         // [TODO] Check that url is firebase
         this.mainRef = new Firebase(self.url);
-        checkForInstance(this, function(returnedInstance){
+        checkForInstance(this, argPyroData.name, function(returnedInstance){
           successCb(returnedInstance);
         });
         //request admin auth token
@@ -171,6 +180,11 @@
           errorCb({message:'Please enter your firebase secret'})
         }
       }
+    },
+    deleteInstance: function (argInstanceName) {
+      // [TODO] Do this with a bound list or check author somehow
+      this.mainRef.child('instances').child(argInstanceName).remove();
+      console.log('instance with the name:'+ argInstanceName + 'was deleted successsfully');
     }
   };
   function loadUsersList(argRef, callback){
@@ -201,8 +215,7 @@
       //check for app existance on pyroBase
       console.log('checkForInstance:', argPyro);
       var instanceList = argPyro.pyroRef.child("instances");
-      var instanceName = argPyro.currentInstance.name;
-      instanceList.orderByChild("name").equalTo(instanceName).once('value', function(usersSnap){
+      instanceList.orderByChild("name").equalTo(argName).once('value', function(usersSnap){
         console.log('usersSnap:', usersSnap);
         if(usersSnap.val() == null) {
           console.log('App does not already exist');
@@ -212,7 +225,7 @@
         else {
           console.log('app already exists');
           if(callback) {
-            callback(usersSnap.child(instanceName));
+            callback(usersSnap.child(argName));
           }
         }
       });
@@ -244,23 +257,26 @@
       }
     })
    }
-  
   function emailSignup(argSignupData, argThis, successCb, errorCb) {
-    argThis.mainRef.createUser(argSignupData, function(error) {
-      if (error === null) {
-        console.log("User created successfully");
-        // Login with new account and create profile
-          argThis.login(argSignupData, function(authData){
-            createUserProfile(authData, argThis.mainRef, function(userAccount){
-              var newUser = new User(authData);
-              successCb(newUser);
+    if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
+      errorCb({message:'The specified email/password combination is incorrect'});
+    } else {
+      argThis.mainRef.createUser(argSignupData, function(error) {
+        if (error === null) {
+          console.log("User created successfully");
+          // Login with new account and create profile
+            argThis.login(argSignupData, function(authData){
+              createUserProfile(authData, argThis.mainRef, function(userAccount){
+                var newUser = new User(authData);
+                successCb(newUser);
+              });
             });
-          });
-      } else {
-        console.error("Error creating user:", error.message);
-        errorCb(error);
-      }
-    });
+        } else {
+          console.error("Error creating user:", error.message);
+          errorCb(error);
+        }
+      });
+    }
   }
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
     console.log('authWithPassword',argLoginData, argRef, successCb, errorCb);
@@ -280,13 +296,16 @@
           errorCb(error);
         }
       });
-    } else {
+    } else if(!argLoginData.hasOwnProperty('password')){
       // [TODO] Use error handling from Firbase.authWithPassword()
-      console.error('Incorrect login info', argLoginData);
-      var err = {message:'Incorrect login info'}
-      errorCb('Incorrect login info:', argLoginData);
+      console.error('Login info does not include password:', argLoginData);
+      var err = {message:'No Password Entered'};
+      errorCb(err);
+    } else {
+      var err = {message:'Login Error'};
+      errorCb(err);
     }
-  }          
+  }         
   function createUserProfile(argAuthData, argRef, callback) {
     console.log('createUserAccount called');
     var userRef = argRef.child('users').child(argAuthData.uid);
