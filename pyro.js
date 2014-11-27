@@ -233,30 +233,33 @@
    //------------- User ---------------//
    function User(argUserData, argMainRef) {
     console.log('NEW User');
-    if(argUserData.hasOwnProperty('email')) {
-      this.email = argUserData.email
+    var self;
+    if(argUserData) {
+      self = argUserData;
     } else {
-      throw Error('Email needed to create user');
+      throw Error('No userData provided.');
     }
-    this.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
-      return returnedAccount;
-    })
-    return this;
+    if(argUserData.hasOwnProperty('email')){
+      self.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
+        return returnedAccount;
+      })
+    }
+    return self;
    }
-   function getAccountOrSignup(){
-    return checkForUser(argUserData, argMainRef, function(userAccount){
-      if(userAccount != null) {
-        return userAccount;
-      } else {
-        return new User(argUserData, this);
-        emailSignup(argUserData, function(returnedUser){
+   // function getAccountOrSignup(){
+   //  return checkForUser(argUserData, argMainRef, function(userAccount){
+   //    if(userAccount != null) {
+   //      return userAccount;
+   //    } else {
+   //      return new User(argUserData, this);
+   //      emailSignup(argUserData, this, function(returnedUser){
 
-        }, function(){
+   //      }, function(){
 
-        });
-      }
-    })
-   }
+   //      });
+   //    }
+   //  })
+   // }
   function emailSignup(argSignupData, argThis, successCb, errorCb) {
     if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
       errorCb({message:'The specified email/password combination is incorrect'});
@@ -265,7 +268,7 @@
         if (error === null) {
           console.log("User created successfully");
           // Login with new account and create profile
-            argThis.login(argSignupData, function(authData){
+            authWithPassword(argSignupData, argThis.mainRef, function(authData){
               createUserProfile(authData, argThis.mainRef, function(userAccount){
                 var newUser = new User(authData);
                 successCb(newUser);
@@ -279,7 +282,6 @@
     }
   }
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
-    console.log('authWithPassword',argLoginData, argRef, successCb, errorCb);
     if(argLoginData.hasOwnProperty('email') && argLoginData.hasOwnProperty('password')) {
       argRef.authWithPassword(argLoginData, function(error, authData) {
         if (error === null) {
@@ -287,22 +289,20 @@
           console.log("User ID: " + authData.uid + ", Provider: " + authData.provider);
           // Manage presense
           setupPresence(authData.uid, argRef);
+          successCb(authData);
           // Add account if it doesn't already exist
-          userById(authData.uid, argRef.child('users'), function(userAccount){
-            successCb(userAccount);
-          });
+          // userById(authData.uid, argRef.child('users'), function(userAccount){
+          //   successCb(userAccount);
+          // });
         } else {
           console.error("Error authenticating user:", error);
           errorCb(error);
         }
       });
-    } else if(!argLoginData.hasOwnProperty('password')){
-      // [TODO] Use error handling from Firbase.authWithPassword()
-      console.error('Login info does not include password:', argLoginData);
-      var err = {message:'No Password Entered'};
-      errorCb(err);
     } else {
-      var err = {message:'Login Error'};
+      // [TODO] Use error handling from Firbase.authWithPassword()
+      console.error('The specified email/password combination is incorrect');
+      var err = {message:'The specified email/password combination is incorrect'};
       errorCb(err);
     }
   }         
@@ -314,9 +314,10 @@
       userObj.email = argAuthData.password.email;
     }
     userRef.on('value', function(userSnap){
-      if(userSnap.val() == null) {
-        userObj.createdAt = Firebase.ServerValue.TIMESTAMP
-        userRef.setWithPriority(userObj, userEmail, function(){
+      if(userSnap.val() == null || userSnap.hasChild('sessions')) {
+        userObj.createdAt = Firebase.ServerValue.TIMESTAMP;
+        // [TODO] Add check for email before using it as priority
+        userRef.setWithPriority(userObj, userObj.email, function(){
           console.log('New user account created:', userSnap.val());
           callback(userSnap.val());
         });
@@ -340,19 +341,35 @@
         var onDisconnectRef = argMainRef.onDisconnect();
         // add session and set disconnect
         var session = sessionsRef.push({began: Firebase.ServerValue.TIMESTAMP, user:argUserId});
-        session.child('ended').onDisconnect().set(Firebase.ServerValue.TIMESTAMP);
+        var endedRef = session.child('ended')
+        endedRef.onDisconnect().set(Firebase.ServerValue.TIMESTAMP);
+
         //add correct session id to user
         // adding session id to current list under user's session
         var currentSesh = userSessionRef.child('current').push(session.name());
         // Remove session id from users current session folder
         currentSesh.onDisconnect().remove();
+
         // remove from presense list
         onlineRef.set(true);
         onlineRef.onDisconnect().remove();
         // Add session id to past sessions on disconnect
         // pastSessionsRef.onDisconnect().push(session.name());
+        // Do same on unAuth
+        onUnAuth(function(){
+          endedRef.set(Firebase.ServerValue.TIMESTAMP);
+          currentSesh.remove();
+           onlineRef.remove();
+        }); 
       }
     });
+    function onUnAuth(callback){
+      onlineRef.onAuth(function(authData){
+        if(!authData){
+          callback();
+        }
+      });
+    }
    }
    function userById(argUserId, argUsersRef, callback) {
     console.log('userById run with id:', argUserId);
