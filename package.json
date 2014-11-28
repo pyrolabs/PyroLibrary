@@ -1,0 +1,23 @@
+{
+  "name": "PyroLibrary",
+  "version": "0.0.0",
+  "description": "Library containing the functionality for the Pyro Platform.",
+  "main": "Gruntfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyrolabs/PyroLibrary.git"
+  },
+  "author": "Scott Prue",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pyrolabs/PyroLibrary/issues"
+  },
+  "homepage": "https://github.com/pyrolabs/PyroLibrary",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-aws-s3": "^0.9.4"
+  }
+}
