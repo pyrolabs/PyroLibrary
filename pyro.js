@@ -130,7 +130,10 @@
     instanceRef: function(argInstanceData, successCb, errorCb) {
       console.log('loadInstance:', argInstanceData);
       this.currentInstance = {name:argInstanceData.name}
-      checkForInstance(this, argInstanceData.name, successCb, errorCb);
+      checkForInstance(this, argInstanceData.name, function(instanceRef){
+        console.log('checkForInstance returned:', instanceRef);
+        successCb(instanceRef);
+      });
     },
     getObjectCount: function(argListName, callback){
       var self = this;
@@ -151,12 +154,9 @@
     },
     createInstance: function (argPyroData, successCb, errorCb) {
       var self = this;
-      if(argPyroData.hasOwnProperty('name')){
+      if(argPyroData.hasOwnProperty('name') && argPyroData.hasOwnProperty('url')){
         // [TODO] Check that url is firebase
-        this.mainRef = new Firebase(self.url);
-        checkForInstance(this, argPyroData.name, function(returnedInstance){
-          successCb(returnedInstance);
-        });
+        createNewInstance(self, argPyroData, successCb, errorCb);
         //request admin auth token
         
         // var xmlhttp = new XMLHttpRequest();
@@ -194,19 +194,34 @@
       });
   }
   //------------ Instance action functions -----------------//
-  function createNewInstance(argPyro, successCb, errorCb) {
-    checkForInstance(argPyro, function(returnedInstance){
+  function createNewInstance(argPyro, argInstanceData, successCb, errorCb) {
+    console.log('createNewInstance called');
+    checkForInstance(argPyro, argInstanceData.name, function(returnedInstance){
+      console.log('checkForInstance returned:', returnedInstance)
       if(returnedInstance == null) {
-        instanceList.child(argPyro.name).set(instanceData, function(){
-          argPyro.pyroRef = instanceList.child(argPyro.name);
-          if(successCb) {
-            successCb(argPyro.pyroRef);
+
+        // [TODO] User create object function
+        var instanceObj = argInstanceData;
+        instanceObj.createdAt = Firebase.ServerValue.TIMESTAMP;
+        if(argPyro.getAuth()){
+          instanceObj.author = argPyro.getAuth().uid;
+        }
+        console.log('Setting new instance to:', instanceObj);
+        var instanceRef = argPyro.mainRef.child('instances').child(argInstanceData.name)
+          instanceRef.set(instanceObj, function(err){
+          if(!err){
+            console.log('creation successful...... callllllllin back:', instanceRef);
+            if(successCb) {
+              successCb(instanceRef);
+            }
           }
         });
       } else {
         var err = {message:'App already exists'}
         console.warn(err.message);
-        errorCb(err);
+        if(errorCb) {
+          errorCb(err);
+        }
       }
     });
   }

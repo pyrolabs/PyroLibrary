@@ -1,7 +1,5 @@
 module.exports = function(grunt) {
     grunt.registerTask('watch', ['watch']);
-    grunt.registerTask('dist', ['shell:home']);
-    grunt.registerTask('test', ['shell:test']);
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -12,7 +10,7 @@ module.exports = function(grunt) {
               port: 8080,
               //keepalive: true, keeping grunt running
               livereload:true,
-              base: './app/',
+              base: 'index.html',
               open: {
                 target: 'http://localhost:8080',
                 appName: 'Google Chrome',
