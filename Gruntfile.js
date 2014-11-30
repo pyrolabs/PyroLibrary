@@ -35,12 +35,12 @@ module.exports = function(grunt) {
           options: {
             accessKeyId: '<%= config.AWSAccessKeyId %>', // Use the variables
             secretAccessKey: '<%= config.AWSSecretKey %>', // You can also use env variables
-            region: 'US Standard',
-            bucket:'pyro-labs',
+            bucket:'pyro-cdn',
             uploadConcurrency: 5, // 5 simultaneous uploads
-            downloadConcurrency: 5 // 5 simultaneous downloads
           },
-          {'action': 'upload', expand: true, cwd: 'dist/js', src: ['pyro.js'], dest: 'app/js/'}
+          cdn:{
+            files:[{'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.js'], dest: 'library'}]
+          }
         }
 
     });
@@ -60,7 +60,7 @@ module.exports = function(grunt) {
     // Default task(s).
     grunt.registerTask('default', ['connect', 'watch']);
 
-    grunt.registerTask('build', ['aws_s3']);
+    grunt.registerTask('build', ['aws_s3:cdn']);
 
 
     grunt.registerTask('serve', ['connect'], function() {

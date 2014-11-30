@@ -93,7 +93,6 @@
       }
     },
     createObject: function(argListName, argObject, callback) {
-      // Add author to object if logged in
       var auth = this.getAuth();
       if(auth) {
         argObject.author = auth.uid;
@@ -308,28 +307,20 @@
     }
   }         
   function createUserProfile(argAuthData, argRef, callback) {
-    console.log('createUserAccount called with:', argAuthData);
+    console.log('createUserAccount called');
     var userRef = argRef.child('users').child(argAuthData.uid);
     var userObj = {role:10, provider: argAuthData.provider};
     if(argAuthData.provider == 'password') {
-      console.log('provider is password');
       userObj.email = argAuthData.password.email;
-      console.log('email set:', userObj);
     }
-    userRef.once('value', function(userSnap){
-      var userAccount = userSnap.val()
-      if(userAccount == null || userSnap.hasChild('sessions')) {
+    userRef.on('value', function(userSnap){
+      if(userSnap.val() == null || userSnap.hasChild('sessions')) {
         userObj.createdAt = Firebase.ServerValue.TIMESTAMP;
         // [TODO] Add check for email before using it as priority
-        if(userObj.hasOwnProperty('email')) {
-          userRef.setWithPriority(userObj, userObj.email, function(){
-            console.log('New user account created:', userObj);
-            callback(userObj);
-          });
-        } else {
-          console.error('Cannot create new account without email:', userObj);
-          callback(userObj);
-        }
+        userRef.setWithPriority(userObj, userObj.email, function(){
+          console.log('New user account created:', userSnap.val());
+          callback(userSnap.val());
+        });
       } else {
         console.error('User account already exists');
         throw Error('User account already exists');
