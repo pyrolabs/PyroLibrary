@@ -23,9 +23,14 @@
           // this.name = 
         }
         // Pyro Is is a seed app
-        if(argPyroData.hasOwnProperty('dbName') && argPyroData.hasOwnProperty('appUrl')) {
+        if(argPyroData.hasOwnProperty('dbName') ) {
           this.dbName = argPyroData.dbName;
+        } 
+        if(argPyroData.hasOwnProperty('appUrl')){
           this.appUrl = argPyroData.appUrl;
+
+        } else {
+          this.appUrl = this.name + ".s3-website-us-east-1.amazonaws.com";
         }
       } else {
         console.error('Missing firebase url.');
