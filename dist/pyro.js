@@ -4,10 +4,12 @@
   // Constructor:
   function Pyro (argPyroData, errorCb) {
     //Check for existance of Firebase
+    //[TODO] Pass argPyroData object through
     if(typeof Firebase != 'undefined' && typeof argPyroData != 'undefined') {
       if(argPyroData.hasOwnProperty('url')){
         // [TODO] Check that url is firebase
         this.url = argPyroData.url;
+        this.dbUrl = this.url;
         this.mainRef = new Firebase(argPyroData.url);
         this.pyroRef = pyroRef;
         // Not Required variables
@@ -19,6 +21,11 @@
         } else {
           //Regex name from url
           // this.name = 
+        }
+        // Pyro Is is a seed app
+        if(argPyroData.hasOwnProperty('dbName') && argPyroData.hasOwnProperty('appUrl')) {
+          this.dbName = argPyroData.dbName;
+          this.appUrl = argPyroData.appUrl;
         }
       } else {
         console.error('Missing firebase url.');
