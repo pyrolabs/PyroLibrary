@@ -31,6 +31,7 @@
 
         } else {
           this.appUrl = this.name + ".s3-website-us-east-1.amazonaws.com";
+
         }
       } else {
         console.error('Missing firebase url.');
@@ -104,6 +105,12 @@
         console.warn('listByAuthor cannot load list without current user');
       }
     },
+    /** Creates an object provided the name of the list the object will go into and the object itself.
+     * The object is created with a createdAt parameter that is a server timestamp from Firebase.
+     * Also, if you are currently signed it it will add your uid to the author object.
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {object} object - 
+    */
     createObject: function(argListName, argObject, callback) {
       var auth = this.getAuth();
       if(auth) {
