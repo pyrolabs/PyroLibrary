@@ -37,7 +37,7 @@ module.exports = function(grunt) {
             uploadConcurrency: 5, // 5 simultaneous uploads
           },
           cdn:{
-            files:[{'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.js'], dest: 'library'}]
+            files:[{'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.js','pyro.min.js'], dest: 'library'}]
           }
         },
         uglify:{

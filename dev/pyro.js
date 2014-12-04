@@ -107,7 +107,6 @@
      * @params loginData.password - Password of user to login
      */
     login: function(argLoginData, successCb, errorCb) {
-      console.log('Pyro login:', arguments);
       var self = this;
       // check for existnace of main ref
       authWithPassword(argLoginData, self.mainRef, successCb, errorCb);
@@ -119,7 +118,6 @@
       }
     },
     getAuth: function() {
-      console.log('getAuth called');
       var authData = this.mainRef.getAuth();
       if (authData) {
         return authData;
@@ -173,12 +171,27 @@
         callback(null);
       }
     },
+    /** 
+     * Loads object given list name and object id
+     * @function Pyro.loadObject
+     * @param {string} ListName - The name of the list the object will be put into.
+     * @param {string} ObjectId - Key of object to be loaded
+     * @param {function} OnComplete - Function that runs on completion of load operation
+     * @param {object} OnComplete.ReturnValue - Loaded object
+    */
     loadObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
       listRef.child(argObjectId).on('value', function(objectSnap){
         callback(objectSnap.val());
       });
     },
+    /** 
+     * Deletes object given list name and object id
+     * @function Pyro.loadObject
+     * @param {string} ListName - The name of the list the object will be put into.
+     * @param {string} ObjectId - Key of object to be loaded
+     * @param {function} OnComplete - Function that runs on completion of delete operation
+    */
     deleteObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
       listRef.child(argObjectId).remove();
@@ -270,62 +283,61 @@
       }
     });
   }
-
-    function checkForInstance(argPyro, argName, callback) {
-      // [TODO] Add user's id to author object?
-      //check for app existance on pyroBase
-      console.log('checkForInstance:', argPyro);
-      var instanceList = argPyro.pyroRef.child("instances");
-      instanceList.orderByChild("name").equalTo(argName).once('value', function(usersSnap){
-        console.log('usersSnap:', usersSnap);
-        if(usersSnap.val() == null) {
-          console.log('App does not already exist');
-          // Add instance to instance list under the instance name
-          callback(null);
+  function checkForInstance(argPyro, argName, callback) {
+    // [TODO] Add user's id to author object?
+    //check for app existance on pyroBase
+    console.log('checkForInstance:', argPyro);
+    var instanceList = argPyro.pyroRef.child("instances");
+    instanceList.orderByChild("name").equalTo(argName).once('value', function(usersSnap){
+      console.log('usersSnap:', usersSnap);
+      if(usersSnap.val() == null) {
+        console.log('App does not already exist');
+        // Add instance to instance list under the instance name
+        callback(null);
+      }
+      else {
+        console.log('app already exists');
+        if(callback) {
+          callback(usersSnap.child(argName));
         }
-        else {
-          console.log('app already exists');
-          if(callback) {
-            callback(usersSnap.child(argName));
-          }
-        }
-      });
-   }
-   /** User object with extended methods 
-    * @constructor
-    * @params {object} userData 
-    * @params {string} userData.email 
-    * @params {object} mainRef Main app reference
-    */
-   function User(argUserData, argMainRef) {
-    console.log('NEW User');
-    var self;
-    if(argUserData) {
-      self = argUserData;
-    } else {
-      throw Error('No userData provided.');
-    }
-    if(argUserData.hasOwnProperty('email')){
-      self.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
-        return returnedAccount;
-      })
-    }
-    return self;
-   }
-   // function getAccountOrSignup(){
-   //  return checkForUser(argUserData, argMainRef, function(userAccount){
-   //    if(userAccount != null) {
-   //      return userAccount;
-   //    } else {
-   //      return new User(argUserData, this);
-   //      emailSignup(argUserData, this, function(returnedUser){
+      }
+    });
+  }
+ /** User object with extended methods 
+  * @constructor
+  * @params {object} userData 
+  * @params {string} userData.email 
+  * @params {object} mainRef Main app reference
+  */
+ function User(argUserData, argMainRef) {
+  console.log('NEW User');
+  var self;
+  if(argUserData) {
+    self = argUserData;
+  } else {
+    throw Error('No userData provided.');
+  }
+  if(argUserData.hasOwnProperty('email')){
+    self.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
+      return returnedAccount;
+    })
+  }
+  return self;
+ }
+ // function getAccountOrSignup(){
+ //  return checkForUser(argUserData, argMainRef, function(userAccount){
+ //    if(userAccount != null) {
+ //      return userAccount;
+ //    } else {
+ //      return new User(argUserData, this);
+ //      emailSignup(argUserData, this, function(returnedUser){
 
-   //      }, function(){
+ //      }, function(){
 
-   //      });
-   //    }
-   //  })
-   // }
+ //      });
+ //    }
+ //  })
+ // }
    /** Email login functionality
     * @function emailSignup
     * @params {object} signupData Signup data of new user
@@ -338,21 +350,33 @@
     if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
       errorCb({message:'The specified email/password combination is incorrect'});
     } else {
-      argThis.mainRef.createUser(argSignupData, function(error) {
-        if (error === null) {
-          console.log("User created successfully");
-          // Login with new account and create profile
-            authWithPassword(argSignupData, argThis.mainRef, function(authData){
-              createUserProfile(authData, argThis.mainRef, function(userAccount){
-                var newUser = new User(authData);
-                successCb(newUser);
-              });
-            });
+      argThis.mainRef.child('users').orderByChild('email').equalTo(argSignupData.email).limitToFirst(1).once('value', function(userQuery){
+        console.log('userQuery:', userQuery);
+        console.log('userQuery.hasChildren()', userQuery.hasChildren());
+        if(!userQuery.hasChildren()){
+          console.log('New user does not already exist');
+          argThis.mainRef.createUser(argSignupData, function(error) {
+            if (error === null) {
+              console.log("User created successfully");
+              // Login with new account and create profile
+                authWithPassword(argSignupData, argThis.mainRef, function(authData){
+                  createUserProfile(authData, argThis.mainRef, function(userAccount){
+                    var newUser = new User(authData);
+                    successCb(newUser);
+                  });
+                });
+            } else {
+              console.error("Error creating user:", error.message);
+              errorCb(error);
+            }
+          });
         } else {
-          console.error("Error creating user:", error.message);
+          console.warn('Account already exists');
+          var error = {message:'Account already exists', account: JSON.stringify(userQuery.val()), status:'ACCOUNT_EXISTS'}
           errorCb(error);
         }
       });
+
     }
   }
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
@@ -381,13 +405,13 @@
     }
   }         
   function createUserProfile(argAuthData, argRef, callback) {
-    console.log('createUserAccount called');
+    console.log('createUserAccount called:', arguments);
     var userRef = argRef.child('users').child(argAuthData.uid);
     var userObj = {role:10, provider: argAuthData.provider};
     if(argAuthData.provider == 'password') {
       userObj.email = argAuthData.password.email;
     }
-    userRef.on('value', function(userSnap){
+    userRef.once('value', function(userSnap){
       if(userSnap.val() == null || userSnap.hasChild('sessions')) {
         userObj.createdAt = Firebase.ServerValue.TIMESTAMP;
         // [TODO] Add check for email before using it as priority
@@ -396,8 +420,8 @@
           callback(userSnap.val());
         });
       } else {
-        console.error('User account already exists');
-        throw Error('User account already exists');
+        console.error('User account already exists', userSnap.val());
+        callback(userSnap.val());
       }
     });
   } 

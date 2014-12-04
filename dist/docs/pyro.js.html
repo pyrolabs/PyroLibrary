@@ -180,7 +180,6 @@
      * @params loginData.password - Password of user to login
      */
     login: function(argLoginData, successCb, errorCb) {
-      console.log('Pyro login:', arguments);
       var self = this;
       // check for existnace of main ref
       authWithPassword(argLoginData, self.mainRef, successCb, errorCb);
@@ -192,7 +191,6 @@
       }
     },
     getAuth: function() {
-      console.log('getAuth called');
       var authData = this.mainRef.getAuth();
       if (authData) {
         return authData;
@@ -411,21 +409,33 @@
     if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
       errorCb({message:'The specified email/password combination is incorrect'});
     } else {
-      argThis.mainRef.createUser(argSignupData, function(error) {
-        if (error === null) {
-          console.log("User created successfully");
-          // Login with new account and create profile
-            authWithPassword(argSignupData, argThis.mainRef, function(authData){
-              createUserProfile(authData, argThis.mainRef, function(userAccount){
-                var newUser = new User(authData);
-                successCb(newUser);
-              });
-            });
+      argThis.mainRef.child('users').orderByChild('email').equalTo(argSignupData.email).limitToFirst(1).once('value', function(userQuery){
+        console.log('userQuery:', userQuery);
+        console.log('userQuery.hasChildren()', userQuery.hasChildren());
+        if(!userQuery.hasChildren()){
+          console.log('New user does not already exist');
+          argThis.mainRef.createUser(argSignupData, function(error) {
+            if (error === null) {
+              console.log("User created successfully");
+              // Login with new account and create profile
+                authWithPassword(argSignupData, argThis.mainRef, function(authData){
+                  createUserProfile(authData, argThis.mainRef, function(userAccount){
+                    var newUser = new User(authData);
+                    successCb(newUser);
+                  });
+                });
+            } else {
+              console.error("Error creating user:", error.message);
+              errorCb(error);
+            }
+          });
         } else {
-          console.error("Error creating user:", error.message);
+          console.warn('Account already exists');
+          var error = {message:'Account already exists', account: JSON.stringify(userQuery.val()), status:'ACCOUNT_EXISTS'}
           errorCb(error);
         }
       });
+
     }
   }
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
@@ -460,7 +470,7 @@
     if(argAuthData.provider == 'password') {
       userObj.email = argAuthData.password.email;
     }
-    userRef.on('value', function(userSnap){
+    userRef.once('value', function(userSnap){
       if(userSnap.val() == null || userSnap.hasChild('sessions')) {
         userObj.createdAt = Firebase.ServerValue.TIMESTAMP;
         // [TODO] Add check for email before using it as priority
@@ -469,8 +479,8 @@
           callback(userSnap.val());
         });
       } else {
-        console.error('User account already exists');
-        throw Error('User account already exists');
+        console.error('User account already exists', userSnap.val());
+        callback(userSnap.val());
       }
     });
   } 
