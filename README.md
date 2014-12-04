@@ -16,6 +16,7 @@ There are a few methods of starting to use the Pyro Library:
 `var pyro = new Pyro();`
 
 `createObject(objectName, object, callback)`
+
 Parameters:
     * objectName:
         - Type: String
@@ -28,6 +29,17 @@ Parameters:
 
 [Lets build great things together!](mailto:scott@pyrolabs.io)
 
+## Dependencies
+
+### Production
+
+* [Firebase Library](firebase.github.io)
+
+### Development
+* [Grunt](http://gruntjs.com/) - Task Automation
+* [grunt-aws-s3](https://github.com/jpillora/grunt-aws) - Uploading to CDN. Sorry, this won't work if you don't have the correct credentials.
+* [grunt-jsdoc-plugin](https://github.com/krampstudio/grunt-jsdoc) - Automatically generate documentation from comments placed within code
+* [grunt-uglify](https://github.com/gruntjs/grunt-contrib-uglify) - Minification of production version.
 
 ## License
 *Also visible in [LICENSE File](./LICENSE)*

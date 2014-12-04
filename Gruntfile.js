@@ -20,12 +20,12 @@ module.exports = function(grunt) {
         },
         watch: {
           js: {
-            files: ['**/*.js']
-          },
-          html:{
-            files:['**/*.html'],
-            options: {
-              livereload: true
+            files: ['dev/pyro.js'],
+            tasks:['jsdoc'],
+            options:{
+              livereload:{
+                port:35739
+              },
             }
           }
         },
@@ -39,8 +39,24 @@ module.exports = function(grunt) {
           cdn:{
             files:[{'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.js'], dest: 'library'}]
           }
+        },
+        uglify:{
+          my_target:{
+            files:{
+              'dist/pyro.min.js': ['dev/pyro.js']
+            }
+          }
+        },
+        jsdoc: {
+          dist:{
+            src: ['dev/pyro.js'], 
+            options: {
+              destination: 'dist/docs',
+              template : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
+              configure : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template/jsdoc.conf.json"
+            }
+          }
         }
-
     });
 
     //Plugin for "watch"
@@ -55,10 +71,20 @@ module.exports = function(grunt) {
     // S3 File Handling Plugin (For uploading build)
     grunt.loadNpmTasks('grunt-aws-s3');
 
-    // Default task(s).
-    grunt.registerTask('default', ['connect', 'watch']);
+    //Uglify
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    
+    // JSDoc
+    grunt.loadNpmTasks('grunt-jsdoc');
 
-    grunt.registerTask('build', ['aws_s3:cdn']);
+    // Default task(s).
+    grunt.registerTask('default', [ 'watch']);
+    /* Builds minified script and creates documentation
+      @task
+    */
+    grunt.registerTask('build', ['uglify', 'jsdoc']);
+    
+    grunt.registerTask('publish', ['aws_s3:cdn', 'jsdoc', 'uglify']);
 
 
     grunt.registerTask('serve', ['connect'], function() {
