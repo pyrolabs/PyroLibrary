@@ -244,12 +244,27 @@
         callback(null);
       }
     },
+    /** 
+     * Loads object given list name and object id
+     * @function Pyro.loadObject
+     * @param {string} ListName - The name of the list the object will be put into.
+     * @param {string} ObjectId - Key of object to be loaded
+     * @param {function} OnComplete - Function that runs on completion of load operation
+     * @param {object} OnComplete.ReturnValue - Loaded object
+    */
     loadObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
       listRef.child(argObjectId).on('value', function(objectSnap){
         callback(objectSnap.val());
       });
     },
+    /** 
+     * Deletes object given list name and object id
+     * @function Pyro.loadObject
+     * @param {string} ListName - The name of the list the object will be put into.
+     * @param {string} ObjectId - Key of object to be loaded
+     * @param {function} OnComplete - Function that runs on completion of delete operation
+    */
     deleteObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
       listRef.child(argObjectId).remove();
@@ -341,62 +356,61 @@
       }
     });
   }
-
-    function checkForInstance(argPyro, argName, callback) {
-      // [TODO] Add user's id to author object?
-      //check for app existance on pyroBase
-      console.log('checkForInstance:', argPyro);
-      var instanceList = argPyro.pyroRef.child("instances");
-      instanceList.orderByChild("name").equalTo(argName).once('value', function(usersSnap){
-        console.log('usersSnap:', usersSnap);
-        if(usersSnap.val() == null) {
-          console.log('App does not already exist');
-          // Add instance to instance list under the instance name
-          callback(null);
+  function checkForInstance(argPyro, argName, callback) {
+    // [TODO] Add user's id to author object?
+    //check for app existance on pyroBase
+    console.log('checkForInstance:', argPyro);
+    var instanceList = argPyro.pyroRef.child("instances");
+    instanceList.orderByChild("name").equalTo(argName).once('value', function(usersSnap){
+      console.log('usersSnap:', usersSnap);
+      if(usersSnap.val() == null) {
+        console.log('App does not already exist');
+        // Add instance to instance list under the instance name
+        callback(null);
+      }
+      else {
+        console.log('app already exists');
+        if(callback) {
+          callback(usersSnap.child(argName));
         }
-        else {
-          console.log('app already exists');
-          if(callback) {
-            callback(usersSnap.child(argName));
-          }
-        }
-      });
-   }
-   /** User object with extended methods 
-    * @constructor
-    * @params {object} userData 
-    * @params {string} userData.email 
-    * @params {object} mainRef Main app reference
-    */
-   function User(argUserData, argMainRef) {
-    console.log('NEW User');
-    var self;
-    if(argUserData) {
-      self = argUserData;
-    } else {
-      throw Error('No userData provided.');
-    }
-    if(argUserData.hasOwnProperty('email')){
-      self.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
-        return returnedAccount;
-      })
-    }
-    return self;
-   }
-   // function getAccountOrSignup(){
-   //  return checkForUser(argUserData, argMainRef, function(userAccount){
-   //    if(userAccount != null) {
-   //      return userAccount;
-   //    } else {
-   //      return new User(argUserData, this);
-   //      emailSignup(argUserData, this, function(returnedUser){
+      }
+    });
+  }
+ /** User object with extended methods 
+  * @constructor
+  * @params {object} userData 
+  * @params {string} userData.email 
+  * @params {object} mainRef Main app reference
+  */
+ function User(argUserData, argMainRef) {
+  console.log('NEW User');
+  var self;
+  if(argUserData) {
+    self = argUserData;
+  } else {
+    throw Error('No userData provided.');
+  }
+  if(argUserData.hasOwnProperty('email')){
+    self.account = checkForUser(argUserData.email, argMainRef, function(returnedAccount){
+      return returnedAccount;
+    })
+  }
+  return self;
+ }
+ // function getAccountOrSignup(){
+ //  return checkForUser(argUserData, argMainRef, function(userAccount){
+ //    if(userAccount != null) {
+ //      return userAccount;
+ //    } else {
+ //      return new User(argUserData, this);
+ //      emailSignup(argUserData, this, function(returnedUser){
 
-   //      }, function(){
+ //      }, function(){
 
-   //      });
-   //    }
-   //  })
-   // }
+ //      });
+ //    }
+ //  })
+ // }
    /** Email login functionality
     * @function emailSignup
     * @params {object} signupData Signup data of new user
@@ -464,7 +478,7 @@
     }
   }         
   function createUserProfile(argAuthData, argRef, callback) {
-    console.log('createUserAccount called');
+    console.log('createUserAccount called:', arguments);
     var userRef = argRef.child('users').child(argAuthData.uid);
     var userObj = {role:10, provider: argAuthData.provider};
     if(argAuthData.provider == 'password') {
@@ -503,7 +517,7 @@
 
         //add correct session id to user
         // adding session id to current list under user's session
-        var currentSesh = userSessionRef.child('current').push(session.name());
+        var currentSesh = userSessionRef.child('current').push(session.key());
         // Remove session id from users current session folder
         currentSesh.onDisconnect().remove();
 
@@ -511,7 +525,7 @@
         onlineRef.set(true);
         onlineRef.onDisconnect().remove();
         // Add session id to past sessions on disconnect
-        // pastSessionsRef.onDisconnect().push(session.name());
+        // pastSessionsRef.onDisconnect().push(session.key());
         // Do same on unAuth
         onUnAuth(function(){
           endedRef.set(Firebase.ServerValue.TIMESTAMP);
@@ -585,7 +599,7 @@
 					
 		<span class="jsdoc-message">
 		Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a>
-		on Wed Dec 3rd 2014 using the <a
+		on Thu Dec 4th 2014 using the <a
 			href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
 		</span>
 				</footer>
