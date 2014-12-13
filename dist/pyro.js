@@ -475,8 +475,8 @@
       callback(userSnap.val());
     });
    }
-          // Single Checking function for all user types (should be in one folder)
-       // [TODO] Fix repative code within if statements
+    // Single Checking function for all user types (should be in one folder)
+    // [TODO] Fix repative code within if statements
     function checkForUser(argUserData, argUsersRef, callback) {
       console.log('CheckForUser:', argUserData);
       var userEmail = 't@t.com';
@@ -490,15 +490,9 @@
           // object contains email
           userEmail = argUserData.email;
         }
-        argUsersRef.orderByChild('email').startAt(userEmail).endAt(userEmail).on("value", function(querySnapshot) {
+        argUsersRef.orderByChild('email').equalTo(userEmail).on("value", function(querySnapshot) {
             console.log('check for user returned:', querySnapshot.val());
-            querySnapshot.forEach(function(){
-
-            });
             callback(querySnapshot.val());
-          if(querySnapshot.val() != null) {
-            console.log('Usersnap:', querySnapshot.val());
-          } 
         });
       }
       else {
