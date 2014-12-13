@@ -37,7 +37,10 @@ module.exports = function(grunt) {
             uploadConcurrency: 5, // 5 simultaneous uploads
           },
           cdn:{
-            files:[{'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.js','pyro.min.js'], dest: 'library'}]
+            files:[
+            {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js', 'docs'], dest: 'library/v0'}, 
+            {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/v0'}
+            ]
           }
         },
         uglify:{
@@ -84,7 +87,9 @@ module.exports = function(grunt) {
     */
     grunt.registerTask('build', ['uglify', 'jsdoc']);
     
-    grunt.registerTask('publish', ['aws_s3:cdn', 'jsdoc', 'uglify']);
+    grunt.registerTask('docs', ['jsdoc']);
+    
+    grunt.registerTask('publish', ['jsdoc', 'uglify', 'aws_s3:cdn']);
 
 
     grunt.registerTask('serve', ['connect'], function() {

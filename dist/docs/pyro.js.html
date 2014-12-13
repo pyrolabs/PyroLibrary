@@ -46,7 +46,31 @@
 					<ul class="dropdown-menu ">
 						
 						<li>
+							<a href="global.html#authWithPassword">authWithPassword</a>
+						</li>
+						
+						<li>
+							<a href="global.html#checkForUser">checkForUser</a>
+						</li>
+						
+						<li>
+							<a href="global.html#createUserProfile">createUserProfile</a>
+						</li>
+						
+						<li>
 							<a href="global.html#emailSignup">emailSignup</a>
+						</li>
+						
+						<li>
+							<a href="global.html#onUnAuth">onUnAuth</a>
+						</li>
+						
+						<li>
+							<a href="global.html#setupPresense">setupPresense</a>
+						</li>
+						
+						<li>
+							<a href="global.html#userById">userById</a>
 						</li>
 						
 
@@ -82,7 +106,6 @@
    *
    */
   function Pyro (argPyroData) {
-    //Check for existance of Firebase
     //[TODO] Pass argPyroData object through
     if(typeof Firebase != 'undefined' && typeof argPyroData != 'undefined') {
       if(argPyroData.hasOwnProperty('url')){
@@ -92,7 +115,7 @@
         this.mainRef = new Firebase(argPyroData.url);
         this.pyroRef = pyroRef;
         // Not Required variables
-        if(argPyroData.hasOwnProperty('secret')) {
+      if(argPyroData.hasOwnProperty('secret')) {
           this.secret = argPyroData.secret;
         }
         if(argPyroData.hasOwnProperty('name')) {
@@ -130,22 +153,9 @@
   var pyroRef = new Firebase('http://pyro.firebaseio.com');
 
   Pyro.prototype = {
-    /** 
-     * Signup a new user with email and password. Sessions are handled automatically.
-     * @function Pyro.userSignup
-     * @params {object} signupData - Information of new user to signup
-     * @params {string} signupData.email - Email of new user
-     * @params {string} signupData.password - Password of new user
-     */
-    userSignup: function(argSignupData, successCb, errorCb) {
-      var self = this;
-      emailSignup(argSignupData, self, successCb, errorCb);
-    },
-    /** 
-     * Authenticate a user anonymously. Sessions are handled automatically.
-     * @function Pyro.authAnonymously
-     * @params {function} onComplete - Function called when completed
-     * @params {object} onComplete.user - Return value of onComplete
+    /**  Authenticate a user anonymously. Sessions are handled automatically.
+     * @memberof Pyro#
+     * @param {Pyro~authAnonymouslyCb} onComplete - Function called when completed
      */
     authAnonymously: function(callback){
       //check for auth info
@@ -172,24 +182,51 @@
         }
       }
     },
+    /** Callback used by authAnonymously
+     * @callback Pyro~authAnonymouslyCb
+     * @param {object} auth Anonymous auth information
+     * @param {string} auth.uid Unique id of anonymous user
+     * @param {string} auth.provider Login provider of user
+     */
+
+    /** 
+     * Signup a new user with email and password. Sessions are handled automatically.
+     * @memberof Pyro#
+     * @param {object} signupData - Information of new user to signup
+     * @param {string} signupData.email - Email of new user
+     * @param {string} signupData.password - Password of new user
+     */
+    userSignup: function(argSignupData, successCb, errorCb) {
+      var self = this;
+      emailSignup(argSignupData, self, successCb, errorCb);
+    },
     /** 
      * Login a user with email and password
-     * @function Pyro.login
-     * @params loginData - Login information for user
-     * @params loginData.email - Email of user to login
-     * @params loginData.password - Password of user to login
+     * @memberof Pyro#
+     * @param loginData - Login information for user
+     * @param loginData.email - Email of user to login
+     * @param loginData.password - Password of user to login
      */
     login: function(argLoginData, successCb, errorCb) {
       var self = this;
       // check for existnace of main ref
       authWithPassword(argLoginData, self.mainRef, successCb, errorCb);
     },
+    /** 
+     * Logout the current user from app Firebase
+     * @memberof Pyro#
+     * @param onComplete - Function that runs on completion of logout (Not Required)
+     */
     logout:function(callback){
       this.mainRef.unauth();
       if(callback){
         callback();
       }
     },
+    /** 
+     * Gets current auth information for main app reference
+     * @memberof Pyro#
+    */
     getAuth: function() {
       var authData = this.mainRef.getAuth();
       if (authData) {
@@ -199,6 +236,12 @@
         return null;
       }
     },
+    /** 
+     * Gets list of objects created by the currently logged in User.
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the objects will be grabbed from.
+     * @param {function} onComplete - Function that runs when the list has been retrieved successfully
+    */
     getListByAuthor: function(argListName, callback) {
       var auth = this.getAuth();
       if(auth != null) {
@@ -213,10 +256,10 @@
      * Creates an object provided the name of the list the object will go into and the object itself.
      * The object is created with a createdAt parameter that is a server timestamp from Firebase.
      * If a user is currently signed in, the object will contain the author's `$uid` under the author parameter. This is used for the getListByAuthor function.
-     * @function Pyro.createObject
+     * @memberof Pyro#
      * @param {string} listName - The name of the list the object will be put into.
      * @param {object} object - Object you wish to create
-     * @param {function} onComplete - Function that runs when your object has been created successfully
+     * @param {Pyro~createObjectCb} onComplete - Function that runs when your object has been created successfully
     */
     createObject: function(argListName, argObject, callback) {
       var auth = this.getAuth();
@@ -228,11 +271,15 @@
         callback(newObj);
       });
     },
+    /** Callback function used by createObject
+     * @callback Pyro~createObjectCb
+     * @param {object} newObjRef Firebase reference created by new object
+     */
+
     /** 
      * Retreives account for currently logged in user
-     * @function Pyro.getUser
-     * @param {function} OnComplete - The name of the list the object will be put into.
-     * @param {object} OnComplete.account - Returned user account object
+     * @memberof Pyro#
+     * @param {getUserCb} onComplete - The name of the list the object will be put into.
     */
     getUser: function(callback) {
       if (this.getAuth() != null) {
@@ -244,13 +291,19 @@
         callback(null);
       }
     },
+    /** Callback function used by getUser
+     * @callback getUserCb
+     * @param {object} userAccount Retreived account of logged in user
+     * @param {object} userAccount.email Email of retreived user account 
+     */
+
     /** 
      * Loads object given list name and object id
-     * @function Pyro.loadObject
-     * @param {string} ListName - The name of the list the object will be put into.
-     * @param {string} ObjectId - Key of object to be loaded
-     * @param {function} OnComplete - Function that runs on completion of load operation
-     * @param {object} OnComplete.ReturnValue - Loaded object
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {string} objectId - Key of object to be loaded
+     * @param {function} onComplete - Function that runs on completion of load operation
+     * @param {object} onComplete.ReturnValue - Loaded object
     */
     loadObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
@@ -260,10 +313,10 @@
     },
     /** 
      * Deletes object given list name and object id
-     * @function Pyro.loadObject
-     * @param {string} ListName - The name of the list the object will be put into.
-     * @param {string} ObjectId - Key of object to be loaded
-     * @param {function} OnComplete - Function that runs on completion of delete operation
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {string} objectId - Key of object to be loaded
+     * @param {function} onComplete - Function that runs on completion of delete operation
     */
     deleteObject:function(argListName, argObjectId, callback){
       var listRef = this.mainRef.child(argListName);
@@ -273,28 +326,58 @@
         callback();
       }
     },
+    /** 
+     * Reference to specific pyro instance
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {string} objectId - Key of object to be loaded
+     * @param {function} onComplete - Function that runs on completion of delete operation
+    */
     instanceRef: function(argInstanceData, successCb, errorCb) {
       console.log('loadInstance:', argInstanceData);
       this.currentInstance = {name:argInstanceData.name}
       checkForInstance(this, argInstanceData.name, successCb, errorCb);
     },
+    /** 
+     * Get count of objects in a given list
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {function} onComplete - Function that runs on completion of gathering list count
+    */
     getObjectCount: function(argListName, callback){
       var self = this;
       this.mainRef.child(argListName).on('value', function(usersListSnap){
         callback(usersListSnap.numChildren());
       });
     },
+    /** 
+     * Get user count
+     * @memberof Pyro#
+     * @param {function} onComplete - Function that runs on completion of delete operation
+    */
     getUserCount: function(callback){
       var self = this;
       this.mainRef.child('users').on('value', function(usersListSnap){
         callback(usersListSnap.numChildren());
       });
     },
+    /** 
+     * Get list of users from the main instance ref
+     * @memberof Pyro#
+     * @param {function} onComplete - Function that runs on completion of delete operation
+    */
     getUserList: function(callback){
       this.mainRef.child('users').on('value', function(usersListSnap){
         callback(usersListSnap.val());
       });
     },
+    /** 
+     * Create new instance of pyro
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {string} objectId - Key of object to be loaded
+     * @param {function} onComplete - Function that runs on completion of delete operation
+    */
     createInstance: function (argPyroData, successCb, errorCb) {
       var self = this;
       if(argPyroData.hasOwnProperty('name')){
@@ -304,7 +387,6 @@
           successCb(returnedInstance);
         });
         //request admin auth token
-        
         // var xmlhttp = new XMLHttpRequest();
         //   xmlhttp.open("POST", "http://pyro-server.herokuapp.com/auth");
         //   xmlhttp.onreadystatechange = function() {
@@ -317,7 +399,6 @@
 
         //   xmlhttp.send("secret=" + this.secret);
         //Login to firebase
-        
         // this.mainRef.authWithPassword()
       } else {
         console.log('Missing app info.');
@@ -328,16 +409,23 @@
         }
       }
     },
+    /** 
+     * Deletes pyro instance from list of instances
+     * @memberof Pyro#
+     * @param {string} ListName - The name of the list the object will be put into.
+     * @param {string} ObjectId - Key of object to be loaded
+     * @param {function} OnComplete - Function that runs on completion of delete operation
+    */
     deleteInstance: function (argInstanceName) {
       // [TODO] Do this with a bound list or check author somehow
-      this.mainRef.child('instances').child(argInstanceName).remove();
+      this.pyroRef.child('instances').child(argInstanceName).remove();
       console.log('instance with the name:'+ argInstanceName + 'was deleted successsfully');
     }
   };
   function loadUsersList(argRef, callback){
     argRef.child('users').on('value', function(usersListSnap){
-        callback(usersListSnap);
-      });
+      callback(usersListSnap);
+    });
   }
   //------------ Instance action functions -----------------//
   function createNewInstance(argPyro, successCb, errorCb) {
@@ -378,9 +466,9 @@
   }
  /** User object with extended methods 
   * @constructor
-  * @params {object} userData 
-  * @params {string} userData.email 
-  * @params {object} mainRef Main app reference
+  * @param {object} userData 
+  * @param {string} userData.email 
+  * @param {object} mainRef Main app reference
   */
  function User(argUserData, argMainRef) {
   console.log('NEW User');
@@ -397,28 +485,15 @@
   }
   return self;
  }
- // function getAccountOrSignup(){
- //  return checkForUser(argUserData, argMainRef, function(userAccount){
- //    if(userAccount != null) {
- //      return userAccount;
- //    } else {
- //      return new User(argUserData, this);
- //      emailSignup(argUserData, this, function(returnedUser){
 
- //      }, function(){
-
- //      });
- //    }
- //  })
- // }
-   /** Email login functionality
-    * @function emailSignup
-    * @params {object} signupData Signup data of new user
-    * @params {object} this Pyro Object
-    * @params {function} success Function that runs when you successfully log in
-    * @params {function} error Function that runs if there is an error
-    * @params {object} error.
-    */
+ /** Email login functionality
+  * @function emailSignup
+  * @param {object} signupData Signup data of new user
+  * @param {object} this Pyro Object
+  * @param {function} success Function that runs when you successfully log in
+  * @param {function} error Function that runs if there is an error
+  * @param {object} error.
+  */
   function emailSignup(argSignupData, argThis, successCb, errorCb) {
     if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
       errorCb({message:'The specified email/password combination is incorrect'});
@@ -452,6 +527,26 @@
 
     }
   }
+ /** Modified authWithPassword functionality that handles presense
+  * @function authWithPassword
+  * @param {object} loginData Login data of new user
+  * @param {object} reg Reference to Firebase for which to create auth
+  * @param {authWithPassword~successCb} successCb Function that runs when you successfully log in
+  * @param {Pyro~errorCb} errorCb Function that runs if there is an error
+  *
+  */
+  /**
+   * Success callback for authWithPassword function
+   * @callback authWithPassword~successCb
+   * @param {object} authData Returned authentication data
+   */
+  /**
+   * General error callback
+   * @callback Pyro~errorCb
+   * @param {object} errorObj Object containing error information
+   * @param {string} error Error string
+   * @param {string} message Error message to display to users
+   */
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
     if(argLoginData.hasOwnProperty('email') && argLoginData.hasOwnProperty('password')) {
       argRef.authWithPassword(argLoginData, function(error, authData) {
@@ -476,7 +571,13 @@
       var err = {message:'The specified email/password combination is incorrect'};
       errorCb(err);
     }
-  }         
+  }
+ /** Create a new user profile
+  * @function createUserProfile
+  * @param {object} loginData Login data of new user
+  * @param {object} ref Reference to Firebase for which to create auth
+  * @param {function} callback Function that runs when user profile has been created
+  */
   function createUserProfile(argAuthData, argRef, callback) {
     console.log('createUserAccount called:', arguments);
     var userRef = argRef.child('users').child(argAuthData.uid);
@@ -497,7 +598,12 @@
         callback(userSnap.val());
       }
     });
-  } 
+  }
+ /** Setup presense given user unique id
+  * @function setupPresense
+  * @param {object} uid User unique id
+  * @param {object} ref Reference to Firebase for which to create auth
+  */
    function setupPresence(argUserId, argMainRef) {
     console.log('setupPresence:', arguments);
     var amOnline = argMainRef.child('.info/connected');
@@ -527,58 +633,81 @@
         // Add session id to past sessions on disconnect
         // pastSessionsRef.onDisconnect().push(session.key());
         // Do same on unAuth
-        onUnAuth(function(){
+        onUnAuth(onlinRef, function(){
           endedRef.set(Firebase.ServerValue.TIMESTAMP);
           currentSesh.remove();
            onlineRef.remove();
         }); 
       }
     });
-    function onUnAuth(callback){
-      onlineRef.onAuth(function(authData){
+   }
+   /** onUnAuth wrapper for onAuth functionality provided by Firebase API
+    * @function onUnAuth
+    * @param {object} ref Reference to Firebase of which to watch auth
+    * @param {function} onComplete Function that runs when onUnAuth event is triggered
+    */
+    function onUnAuth(ref, callback){
+      ref.onAuth(function(authData){
         if(!authData){
           callback();
         }
       });
     }
-   }
+  /** Get user account given user unique id
+   * @function userById
+   * @param {string} uid Unique id of user for which to grab info
+   * @param {object} usersRef Reference to users list of Firebase
+   * @param {function} onComplete Function that returns loaded user account information
+   */
    function userById(argUserId, argUsersRef, callback) {
     console.log('userById run with id:', argUserId);
     argUsersRef.child(argUserId).on('value', function(userSnap){
       callback(userSnap.val());
     });
    }
-          // Single Checking function for all user types (should be in one folder)
-       // [TODO] Fix repative code within if statements
-    function checkForUser(argUserData, argUsersRef, callback) {
-      console.log('CheckForUser:', argUserData);
-      var userEmail = 't@t.com';
-      // [TODO] Change to switch statement
-      // [TODO] Change to using provider folder (password if for email/password)
-      if(argUserData.hasOwnProperty('email') || argUserData.hasOwnProperty('password')) {
-        if (argUserData.hasOwnProperty('password')){
-          userEmail = argUserData.password.email;
-        }
-        else if(argUserData.hasOwnProperty('email')) {
-          // object contains email
-          userEmail = argUserData.email;
-        }
-        argUsersRef.orderByChild('email').startAt(userEmail).endAt(userEmail).on("value", function(querySnapshot) {
-            console.log('check for user returned:', querySnapshot.val());
-            querySnapshot.forEach(function(){
-
-            });
-            callback(querySnapshot.val());
-          if(querySnapshot.val() != null) {
-            console.log('Usersnap:', querySnapshot.val());
-          } 
-        });
+  /** check for existance of user and create a new account for them if an account does not exist
+   * @function checkForUser
+   * @param {object} userData Data of user to check for
+   * @param {string} userData.email Email of user to check for
+   * @param {string} userData.password Password of user to check for
+   * @param {object} usersRef Reference to users list of Firebase
+   * @param {function} onComplete Function that returns loaded user account information
+   */
+  function checkForUser(argUserData, argUsersRef, callback) {
+    // [TODO] Fix repative code within if statements
+    console.log('CheckForUser:', argUserData);
+    var userEmail = 't@t.com';
+    // [TODO] Change to switch statement
+    // [TODO] Change to using provider folder (password if for email/password)
+    if(argUserData.hasOwnProperty('email') || argUserData.hasOwnProperty('password')) {
+      if (argUserData.hasOwnProperty('password')){
+        userEmail = argUserData.password.email;
       }
-      else {
-        console.error('Incorrect user info');
+      else if(argUserData.hasOwnProperty('email')) {
+        // object contains email
+        userEmail = argUserData.email;
       }
-      
-    }</pre>
+      argUsersRef.orderByChild('email').equalTo(userEmail).on("value", function(querySnapshot) {
+        console.log('check for user returned:', querySnapshot.val());
+        callback(querySnapshot.val());
+      });
+    }
+    else {
+      console.error('Incorrect user info');
+    }
+  }
+// function getAccountOrSignup(){
+//  return checkForUser(argUserData, argMainRef, function(userAccount){
+//    if(userAccount != null) {
+//      return userAccount;
+//    } else {
+//      return new User(argUserData, this);
+//      emailSignup(argUserData, this, function(returnedUser){
+//      }, function(){
+//      });
+//    }
+//  })
+// }</pre>
 	</article>
 </section>
 
@@ -599,7 +728,7 @@
 					
 		<span class="jsdoc-message">
 		Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.2.2</a>
-		on Thu Dec 4th 2014 using the <a
+		on Sat Dec 13th 2014 using the <a
 			href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
 		</span>
 				</footer>
