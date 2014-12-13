@@ -34,12 +34,13 @@ module.exports = function(grunt) {
             accessKeyId: '<%= config.AWSAccessKeyId %>', // Use the variables
             secretAccessKey: '<%= config.AWSSecretKey %>', // You can also use env variables
             bucket:'pyro-cdn',
-            uploadConcurrency: 5, // 5 simultaneous uploads
+            uploadConcurrency: 50, // 50 simultaneous uploads
           },
           cdn:{
             files:[
-            {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js', 'docs'], dest: 'library/v0'}, 
-            {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/v0'}
+            {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'library/v0'}, 
+            {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/v0'},
+            {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/v0/docs', differential:true}
             ]
           }
         },

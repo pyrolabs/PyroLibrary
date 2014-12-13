@@ -100,9 +100,8 @@
    * 
    * @param {object} PyroData Object containing identifying information for creating a Pyro instance. 
    * @param {string} PyroData.url Firebase url `Required`
-   * @param {string} PyroData.secret Firebase secret
-   * @param {string} PyroData.dbName Database Name
-   * @param {string} PyroData.appUrl Hosted location of generated Pyro App
+   * @param {string} PyroData.dbName Database Name `Required`
+   * @param {string} PyroData.appUrl Hosted location of generated Pyro App `Not Required`
    *
    */
   function Pyro (argPyroData) {
@@ -115,9 +114,6 @@
         this.mainRef = new Firebase(argPyroData.url);
         this.pyroRef = pyroRef;
         // Not Required variables
-      if(argPyroData.hasOwnProperty('secret')) {
-          this.secret = argPyroData.secret;
-        }
         if(argPyroData.hasOwnProperty('name')) {
           this.name = argPyroData.name;
         } else {
@@ -151,7 +147,13 @@
     //  }
   }
   var pyroRef = new Firebase('http://pyro.firebaseio.com');
-
+  /**
+   * General error callback
+   * @callback Pyro~errorCb
+   * @param {object} errorObj Object containing error information
+   * @param {string} error Error string
+   * @param {string} message Error message to display to users
+   */
   Pyro.prototype = {
     /**  Authenticate a user anonymously. Sessions are handled automatically.
      * @memberof Pyro#
@@ -540,13 +542,7 @@
    * @callback authWithPassword~successCb
    * @param {object} authData Returned authentication data
    */
-  /**
-   * General error callback
-   * @callback Pyro~errorCb
-   * @param {object} errorObj Object containing error information
-   * @param {string} error Error string
-   * @param {string} message Error message to display to users
-   */
+
   function authWithPassword(argLoginData, argRef, successCb, errorCb) {
     if(argLoginData.hasOwnProperty('email') && argLoginData.hasOwnProperty('password')) {
       argRef.authWithPassword(argLoginData, function(error, authData) {
