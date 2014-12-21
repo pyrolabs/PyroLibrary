@@ -203,17 +203,23 @@
      */
 
     /** 
-     * Loads object given list name and object id
+     * Loads object given list name and object id Notes: TO SIMILAR TO FIREBASE API
      * @memberof Pyro#
      * @param {string} listName - The name of the list the object will be put into.
      * @param {string} objectId - Key of object to be loaded
-     * @param {function} onComplete - Function that runs on completion of load operation
-     * @param {object} onComplete.ReturnValue - Loaded object
+     * @param {function} onSuccess - Function that runs on completion of load operation
+     * @param {object} onSuccess.ReturnValue - Loaded object
+     * @param {function} onError - Function that runs if there is an error
     */
-    loadObject:function(argListName, argObjectId, callback){
+    loadObject:function(argListName, argObjectId, successCb, errorCb){
+      // [TODO] Add error handling to this
       var listRef = this.mainRef.child(argListName);
       listRef.child(argObjectId).on('value', function(objectSnap){
-        callback(objectSnap.val());
+        successCb(objectSnap.val());
+      }, function(err){
+        if(errorCb){
+          errorCb(err);
+        }
       });
     },
     /** 
@@ -221,59 +227,73 @@
      * @memberof Pyro#
      * @param {string} listName - The name of the list the object will be put into.
      * @param {string} objectId - Key of object to be loaded
-     * @param {function} onComplete - Function that runs on completion of delete operation
+     * @param {function} onSuccess - Function that runs on completion of delete operation
+     * @param {function} onError - Function that runs if delete operation fails `Returns` Error object
     */
-    deleteObject:function(argListName, argObjectId, callback){
+    deleteObject:function(argListName, argObjectId, successCb, errorCb){
       var listRef = this.mainRef.child(argListName);
-      listRef.child(argObjectId).remove();
-      console.log(argObjectId + ' was removed from the ' + argListName + ' list');
-      if(callback){
-        callback();
-      }
+      listRef.child(argObjectId).remove(function(err){
+        if (!error) {
+          console.log(argObjectId + ' was successfully removed from the ' + argListName + ' list');
+          if(successCb){
+            successCb();
+          }
+        } else {
+          console.log('Delete of object with Id: ' + argObjectId + ' out of the list: ' + argListName + ' was not successful. Error: ', error);
+          if(errorCb){
+            errorCb(error);
+          }
+        }
+      });
     },
-    /** 
-     * Reference to specific pyro instance
-     * @memberof Pyro#
-     * @param {string} listName - The name of the list the object will be put into.
-     * @param {string} objectId - Key of object to be loaded
-     * @param {function} onComplete - Function that runs on completion of delete operation
-    */
-    instanceRef: function(argInstanceData, successCb, errorCb) {
-      console.log('loadInstance:', argInstanceData);
-      this.currentInstance = {name:argInstanceData.name}
-      checkForInstance(this, argInstanceData.name, successCb, errorCb);
-    },
+
     /** 
      * Get count of objects in a given list
      * @memberof Pyro#
      * @param {string} listName - The name of the list the object will be put into.
      * @param {function} onComplete - Function that runs on completion of gathering list count
+     * @param {function} onError - Function that runs if there is an error
     */
-    getObjectCount: function(argListName, callback){
+    getObjectCount: function(argListName, successCb, errorCb){
       var self = this;
       this.mainRef.child(argListName).on('value', function(usersListSnap){
-        callback(usersListSnap.numChildren());
+        successCb(usersListSnap.numChildren());
+      }, function(err){
+        if(errorCb){
+          errorCb(err);
+        }
       });
     },
     /** 
      * Get user count
      * @memberof Pyro#
      * @param {function} onComplete - Function that runs on completion of delete operation
+     * @param {function} onError - Function that runs if there is an error
+
     */
-    getUserCount: function(callback){
+    getUserCount: function(successCb, errorCb){
       var self = this;
       this.mainRef.child('users').on('value', function(usersListSnap){
-        callback(usersListSnap.numChildren());
+        sucessCb(usersListSnap.numChildren());
+      }, function(err){
+        if(errorCb){
+          errorCb(err);
+        }
       });
     },
     /** 
-     * Get list of users from the main instance ref
+     * Get list of the users of your app
      * @memberof Pyro#
      * @param {function} onComplete - Function that runs on completion of delete operation
+     * @param {function} onError - Function that runs if there is an error
     */
-    getUserList: function(callback){
+    getUserList: function(successCb, errorCb){
       this.mainRef.child('users').on('value', function(usersListSnap){
-        callback(usersListSnap.val());
+        successCb(usersListSnap.val());
+      }, function(err){
+        if(errorCb){
+          errorCb(err);
+        }
       });
     },
     /** 
@@ -313,6 +333,18 @@
           errorCb({message:'Please enter your firebase secret'})
         }
       }
+    },
+    /** 
+     * Reference to specific pyro instance
+     * @memberof Pyro#
+     * @param {string} listName - The name of the list the object will be put into.
+     * @param {string} objectId - Key of object to be loaded
+     * @param {function} onComplete - Function that runs on completion of delete operation
+    */
+    instanceRef: function(argInstanceData, successCb, errorCb) {
+      console.log('loadInstance:', argInstanceData);
+      this.currentInstance = {name:argInstanceData.name}
+      checkForInstance(this, argInstanceData.name, successCb, errorCb);
     },
     /** 
      * Deletes pyro instance from list of instances
@@ -403,14 +435,15 @@
     if(!argSignupData.hasOwnProperty('email') || !argSignupData.hasOwnProperty('password')){
       errorCb({message:'The specified email/password combination is incorrect'});
     } else {
-      argThis.mainRef.child('users').orderByChild('email').equalTo(argSignupData.email).limitToFirst(1).once('value', function(userQuery){
-        console.log('userQuery:', userQuery);
-        console.log('userQuery.hasChildren()', userQuery.hasChildren());
+      console.log('[emailSignup] contains correct parameters');
+      argThis.mainRef.child('users').orderByChild('email').equalTo(argSignupData.email).on('value', function(userQuery){
+        console.log('[emailSignup] userQuery:', userQuery);
+        console.log('[emailSignup] userQuery.hasChildren()', userQuery.hasChildren());
         if(!userQuery.hasChildren()){
-          console.log('New user does not already exist');
+          console.log('[emailSignup] New user does not already exist');
           argThis.mainRef.createUser(argSignupData, function(error) {
             if (error === null) {
-              console.log("User created successfully");
+              console.log("[emailSignup] User created successfully");
               // Login with new account and create profile
                 authWithPassword(argSignupData, argThis.mainRef, function(authData){
                   createUserProfile(authData, argThis.mainRef, function(userAccount){
@@ -419,17 +452,20 @@
                   });
                 });
             } else {
-              console.error("Error creating user:", error.message);
+              console.error("[emailSignup] Error creating user:", error.message);
               errorCb(error);
             }
           });
         } else {
-          console.warn('Account already exists');
-          var error = {message:'Account already exists', account: JSON.stringify(userQuery.val()), status:'ACCOUNT_EXISTS'}
-          errorCb(error);
+          console.warn('Account already exists. Session must have been added already:', JSON.stringify(userQuery.val()));
+          successCb(userQuery.val());
+          // var error = {message:'Account already exists', account: JSON.stringify(userQuery.val()), status:'ACCOUNT_EXISTS'}
+          // errorCb(error);
         }
+      }, function(error){
+        console.error('[emailSignup] Error checking for existing account:', error);
+        errorCb(error);
       });
-
     }
   }
  /** Modified authWithPassword functionality that handles presense
@@ -532,7 +568,7 @@
         // Add session id to past sessions on disconnect
         // pastSessionsRef.onDisconnect().push(session.key());
         // Do same on unAuth
-        onUnAuth(onlinRef, function(){
+        onUnAuth(onlineRef, function(){
           endedRef.set(Firebase.ServerValue.TIMESTAMP);
           currentSesh.remove();
            onlineRef.remove();
