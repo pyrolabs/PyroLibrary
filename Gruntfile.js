@@ -81,7 +81,22 @@ module.exports = function(grunt) {
               configure : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template/jsdoc.conf.json"
             }
           }
+        },
+        bump:{
+        options:{
+          files:['package.json'],
+          updateConfigs:['pkg'],
+          commit:true,
+          commitMessage:'[RELEASE] Release v%VERSION%',
+          commitFiles:[],
+          createTag:true,
+          tagName:'v%VERSION%',
+          push:true,
+          pushTo:'upstream',
+          gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
+          globalReplace: false
         }
+      },
     });
 
     //Plugin for "watch"
@@ -96,11 +111,14 @@ module.exports = function(grunt) {
     // S3 File Handling Plugin (For uploading build)
     grunt.loadNpmTasks('grunt-aws-s3');
 
-    //Uglify
+    //Uglify/Minify
     grunt.loadNpmTasks('grunt-contrib-uglify');
     
-    // JSDoc
+    // Auto documentation
     grunt.loadNpmTasks('grunt-jsdoc');
+
+    //Auto Versioning
+    grunt.loadNpmTasks('grunt-bump');
 
     // Default task(s).
     grunt.registerTask('default', [ 'watch']);
@@ -113,7 +131,7 @@ module.exports = function(grunt) {
     
     grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:docs'])
 
-    grunt.registerTask('publish', ['jsdoc', 'uglify', 'aws_s3:production', 'aws_s3:docs']);
+    grunt.registerTask('release', ['bump:prerelease','jsdoc', 'uglify', 'aws_s3:production', 'aws_s3:docs']);
 
 
     grunt.registerTask('serve', ['connect'], function() {
