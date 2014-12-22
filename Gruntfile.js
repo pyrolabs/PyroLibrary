@@ -38,8 +38,8 @@ module.exports = function(grunt) {
               uploadConcurrency: 2
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'v0'}, 
-              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'v0'},
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: '<%= pkg.version %>'}, 
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: '<%= pkg.version %>'},
             ]
           },
           staging:{
@@ -50,8 +50,8 @@ module.exports = function(grunt) {
               uploadConcurrency: 2
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging'}, 
-              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging'}            ]
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging/<%= pkg.version %>'}, 
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging/<%= pkg.version %>'}            ]
           },
           docs:{
             options: {

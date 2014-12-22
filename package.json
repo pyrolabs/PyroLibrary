@@ -1,6 +1,6 @@
 {
   "name": "PyroLibrary",
-  "version": "0.0.0",
+  "version": "1.0.0-a.1",
   "description": "Library containing the functionality for the Pyro Platform.",
   "main": "Gruntfile.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "https://github.com/pyrolabs/PyroLibrary.git"
   },
   "author": "Scott Prue",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/pyrolabs/PyroLibrary/issues"
   },
