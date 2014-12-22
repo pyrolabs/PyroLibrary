@@ -274,7 +274,7 @@
     getUserCount: function(successCb, errorCb){
       var self = this;
       this.mainRef.child('users').on('value', function(usersListSnap){
-        sucessCb(usersListSnap.numChildren());
+        successCb(usersListSnap.numChildren());
       }, function(err){
         if(errorCb){
           errorCb(err);
@@ -441,6 +441,7 @@
         console.log('[emailSignup] userQuery.hasChildren()', userQuery.hasChildren());
         if(!userQuery.hasChildren()){
           console.log('[emailSignup] New user does not already exist');
+          // Create user o
           argThis.mainRef.createUser(argSignupData, function(error) {
             if (error === null) {
               console.log("[emailSignup] User created successfully");
