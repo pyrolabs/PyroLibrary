@@ -51,7 +51,8 @@ module.exports = function(grunt) {
             },
             files:[
               {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging/<%= pkg.version %>'}, 
-              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging/<%= pkg.version %>'}            ]
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging/<%= pkg.version %>'}
+            ]
           },
           docs:{
             options: {
@@ -61,7 +62,18 @@ module.exports = function(grunt) {
               uploadConcurrency: 50, // 50 simultaneous uploads
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs', differential:true}
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/<%= pkg.version %>', differential:true}
+            ]
+          },
+          stageDocs:{
+            options: {
+              accessKeyId: '<%= config.AWSAccessKeyId %>', // Use the variables
+              secretAccessKey: '<%= config.AWSSecretKey %>', // You can also use env variables
+              bucket:'pyro-labs',
+              uploadConcurrency: 50, // 50 simultaneous uploads
+            },
+            files:[
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/staging/<%= pkg.version %>', differential:true}
             ]
           }
         },
@@ -129,7 +141,7 @@ module.exports = function(grunt) {
     
     grunt.registerTask('docs', ['jsdoc']);
     
-    grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:docs'])
+    grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:stageDocs'])
 
     grunt.registerTask('release', ['bump:prerelease','jsdoc', 'uglify', 'aws_s3:production', 'aws_s3:docs']);
 
