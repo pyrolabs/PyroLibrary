@@ -95,20 +95,20 @@ module.exports = function(grunt) {
           }
         },
         bump:{
-        options:{
-          files:['package.json'],
-          updateConfigs:['pkg'],
-          commit:true,
-          commitMessage:'[RELEASE] Release v%VERSION%',
-          commitFiles:[],
-          createTag:true,
-          tagName:'v%VERSION%',
-          push:true,
-          pushTo:'upstream',
-          gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
-          globalReplace: false
+          options:{
+            files:['package.json'],
+            updateConfigs:['pkg'],
+            commit:true,
+            commitMessage:'[RELEASE] Release v%VERSION%',
+            commitFiles:['-a'],
+            createTag:true,
+            tagName:'v%VERSION%',
+            push:true,
+            pushTo:'origin',
+            gitDescribeOptions: '--tags --always --abbrev=1 --dirty=-d',
+            globalReplace: false
+          }
         }
-      },
     });
 
     //Plugin for "watch"
@@ -143,7 +143,7 @@ module.exports = function(grunt) {
     
     grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:stageDocs'])
 
-    grunt.registerTask('release', ['bump:prerelease','jsdoc', 'uglify', 'aws_s3:production', 'aws_s3:docs']);
+    grunt.registerTask('release', ['bump-only:prerelease','jsdoc', 'uglify', 'bump-commit', 'aws_s3:production', 'aws_s3:docs']);
 
 
     grunt.registerTask('serve', ['connect'], function() {
