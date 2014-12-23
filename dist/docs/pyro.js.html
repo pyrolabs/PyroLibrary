@@ -62,7 +62,19 @@
 						</li>
 						
 						<li>
+							<a href="global.html#fbRef">fbRef</a>
+						</li>
+						
+						<li>
+							<a href="global.html#firebaseRef">firebaseRef</a>
+						</li>
+						
+						<li>
 							<a href="global.html#onUnAuth">onUnAuth</a>
+						</li>
+						
+						<li>
+							<a href="global.html#pathRef">pathRef</a>
 						</li>
 						
 						<li>
@@ -454,8 +466,55 @@
       // [TODO] Do this with a bound list or check author somehow
       this.pyroRef.child('instances').child(argInstanceName).remove();
       console.log('instance with the name:'+ argInstanceName + 'was deleted successsfully');
+    },
+  /** Get a firebase reference for a path in array | string form
+   *
+   * @function
+   * @name fbRef
+   * @param {String|Array} path relative path to the root folder in Firebase instance
+   * @return a Firebase instance
+   */
+    fbRef: function(path){
+      var ref = this.mainRef;
+      var args = Array.prototype.slice.call(arguments);
+      if( args.length ) {
+        ref = ref.child(pathRef(args));
+      }
+      return ref;
     }
   };
+  /** Firebase Ref function from https://github.com/firebase/angularfire-seed/blob/master/app/js/firebase.utils.js
+   * @function
+   * @name firebaseRef
+   * @param {String|Array} path relative path to the root folder in Firebase instance
+   * @return a Firebase instance
+   */
+  function firebaseRef(path) {
+    var args = Array.prototype.slice.call(arguments);
+    if( args.length ) {
+      ref = ref.child(pathRef(args));
+    }
+    return ref;
+  }
+  /** Path utility function from https://github.com/firebase/angularfire-seed/blob/master/app/js/firebase.utils.js
+   * Example:
+   *
+   * @function
+   * @name pathRef
+   * @param {Array} args Array of reference children
+   * @return {string} pathUrl Url of path in string form
+   */
+  function pathRef(args) {
+    for (var i = 0; i &lt; args.length; i++) {
+      if (angular.isArray(args[i])) {
+        args[i] = pathRef(args[i]);
+      }
+      else if( typeof args[i] !== 'string' ) {
+        throw new Error('Argument '+i+' to firebaseRef is not a string: '+args[i]);
+      }
+    }
+    return args.join('/');
+  }
   function loadUsersList(argRef, callback){
     argRef.child('users').on('value', function(usersListSnap){
       callback(usersListSnap);
