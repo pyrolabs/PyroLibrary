@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
     grunt.registerTask('watch', ['watch']);
+    grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:stageDocs'])
+
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -32,25 +34,25 @@ module.exports = function(grunt) {
         aws_s3:{
           production:{
             options: {
-              accessKeyId: '<%= config.AWSAccessKeyId %>', 
-              secretAccessKey: '<%= config.AWSSecretKey %>', 
+              accessKeyId: '<%= config.AWSAccessKeyId %>',
+              secretAccessKey: '<%= config.AWSSecretKey %>',
               bucket:'pyro-cdn',
               uploadConcurrency: 2
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: '<%= pkg.version %>'}, 
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: '<%= pkg.version %>'},
               {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: '<%= pkg.version %>'},
             ]
           },
           staging:{
             options: {
               accessKeyId: '<%= config.AWSAccessKeyId %>',
-              secretAccessKey: '<%= config.AWSSecretKey %>', 
+              secretAccessKey: '<%= config.AWSSecretKey %>',
               bucket:'pyro-cdn',
               uploadConcurrency: 2
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging/<%= pkg.version %>'}, 
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging/<%= pkg.version %>'},
               {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging/<%= pkg.version %>'}
             ]
           },
@@ -62,7 +64,8 @@ module.exports = function(grunt) {
               uploadConcurrency: 50, // 50 simultaneous uploads
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/<%= pkg.version %>', differential:true}
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/library/<%= pkg.version %>', differential:true},
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/library/current', differential:true}
             ]
           },
           stageDocs:{
@@ -86,7 +89,7 @@ module.exports = function(grunt) {
         },
         jsdoc: {
           dist:{
-            src: ['dev/pyro.js'], 
+            src: ['dev/pyro.js'],
             options: {
               destination: 'dist/docs',
               template : "node_modules/grunt-jsdoc/node_modules/ink-docstrap/template",
@@ -125,7 +128,7 @@ module.exports = function(grunt) {
 
     //Uglify/Minify
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    
+
     // Auto documentation
     grunt.loadNpmTasks('grunt-jsdoc');
 
@@ -138,10 +141,11 @@ module.exports = function(grunt) {
       @task
     */
     grunt.registerTask('build', ['uglify', 'jsdoc']);
-    
+
     grunt.registerTask('docs', ['jsdoc']);
-    
-    grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:staging', 'aws_s3:stageDocs'])
+
+    grunt.registerTask('upload', ['jsdoc', 'aws_s3:docs']);
+
 
     grunt.registerTask('release', ['bump-only:prerelease','jsdoc', 'uglify', 'bump-commit', 'aws_s3:production', 'aws_s3:docs']);
 

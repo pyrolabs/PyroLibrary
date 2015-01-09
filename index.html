@@ -3,29 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-    <title>Pyro Library Tester</title>
+    <title>Pyro Library</title>
     <script src="https://cdn.firebase.com/js/client/2.0.5/firebase.js"></script>
     <script src="pyro.js"></script>
-    <script>
-    	var pyro = new Pyro({url:"https://kyper-snapsell.firebaseio.com", name:'kyper-snapsell'});
-    	var signup = function(){
-    		var email = getRandomInt(0,50) + '@' + getRandomInt(0,50) +'.com';
-    		var testUser = {email:email, password:'a'}
-    		pyro.userSignup(testUser,function(returnedUser){
-    			console.log('signup successful:', returnedUser);
-    		});
-    	}
-    	function getRandomInt(min, max) {
-			  return Math.floor(Math.random() * (max - min)) + min;
-			}
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.8/angular.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.13/angular-ui-router.js"></script>
   </head>
-  <body>
-  <div style="text-align:center;">
-    <h2>Pyro Library Tester</h2>
-    <button onclick="signup()">Test Signup</button>
-  </div>
-  
+  <body ng-app="docsApp">
+  <div ui-view></div>
+
   </body>
 </html>
