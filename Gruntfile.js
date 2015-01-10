@@ -37,51 +37,56 @@ module.exports = function(grunt) {
               accessKeyId: '<%= config.AWSAccessKeyId %>',
               secretAccessKey: '<%= config.AWSSecretKey %>',
               bucket:'pyro-cdn',
-              uploadConcurrency: 2
+              uploadConcurrency: 30
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: '<%= pkg.version %>'},
-              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: '<%= pkg.version %>'},
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'library/<%= pkg.version %>'},
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/<%= pkg.version %>'},
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/<%= pkg.version %>/docs', differential:true},
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'library/current'},
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/current'},
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/current/docs', differential:true}
             ]
           },
-          staging:{
+          productionDocs:{
             options: {
               accessKeyId: '<%= config.AWSAccessKeyId %>',
               secretAccessKey: '<%= config.AWSSecretKey %>',
               bucket:'pyro-cdn',
-              uploadConcurrency: 2
+              uploadConcurrency: 30
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'staging/<%= pkg.version %>'},
-              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'staging/<%= pkg.version %>'}
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/<%= pkg.version %>/docs', differential:true},
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/current/docs', differential:true}
             ]
           },
-          docs:{
+          stage:{
             options: {
-              accessKeyId: '<%= config.AWSAccessKeyId %>', // Use the variables
-              secretAccessKey: '<%= config.AWSSecretKey %>', // You can also use env variables
-              bucket:'pyro-labs',
-              uploadConcurrency: 50, // 50 simultaneous uploads
+              accessKeyId: '<%= config.AWSAccessKeyId %>',
+              secretAccessKey: '<%= config.AWSSecretKey %>',
+              bucket:'pyro-cdn',
+              uploadConcurrency: 30
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/library/<%= pkg.version %>', differential:true},
-              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/library/current', differential:true}
+              {'action': 'upload', expand: true, cwd: 'dist/', src: ['pyro.min.js'], dest: 'library/staging'},
+              {'action': 'upload', expand: true, cwd: 'dev/', src: ['pyro.js'], dest: 'library/staging'},
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/staging/docs', differential:true}
             ]
           },
           stageDocs:{
             options: {
-              accessKeyId: '<%= config.AWSAccessKeyId %>', // Use the variables
-              secretAccessKey: '<%= config.AWSSecretKey %>', // You can also use env variables
-              bucket:'pyro-labs',
-              uploadConcurrency: 50, // 50 simultaneous uploads
+              accessKeyId: '<%= config.AWSAccessKeyId %>',
+              secretAccessKey: '<%= config.AWSSecretKey %>',
+              bucket:'pyro-cdn',
+              uploadConcurrency: 30
             },
             files:[
-              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'docs/staging/<%= pkg.version %>', differential:true}
+              {'action': 'upload', expand: true, cwd: 'dist/docs', src: ['**'], dest: 'library/staging/docs', differential:true}
             ]
           }
         },
         uglify:{
-          my_target:{
+          dist:{
             files:{
               'dist/pyro.min.js': ['dev/pyro.js']
             }
@@ -142,12 +147,12 @@ module.exports = function(grunt) {
     */
     grunt.registerTask('build', ['uglify', 'jsdoc']);
 
-    grunt.registerTask('docs', ['jsdoc']);
+    grunt.registerTask('docs', ['jsdoc', 'aws_s3:stageDocs']);
 
-    grunt.registerTask('upload', ['jsdoc', 'aws_s3:docs']);
+    grunt.registerTask('stage', ['jsdoc', 'uglify', 'aws_s3:stage']);
 
 
-    grunt.registerTask('release', ['bump-only:prerelease','jsdoc', 'uglify', 'bump-commit', 'aws_s3:production', 'aws_s3:docs']);
+    grunt.registerTask('release', ['bump-only:prerelease','jsdoc', 'uglify', 'bump-commit', 'aws_s3:production']);
 
 
     grunt.registerTask('serve', ['connect'], function() {
